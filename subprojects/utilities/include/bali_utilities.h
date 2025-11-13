@@ -13,6 +13,7 @@
  **/
 typedef int64_t bsize_t;
 
+#define BALI_DCHECK_BSIZE_BOUNDS(x) BALI_DCHECK(x <= ((bsize_t) SIZE_MAX))
 #if defined(_WIN32)
 #define BALI_API __declspec(dllexport)
 #elif defined(__GNUC__) || defined(__clang__)

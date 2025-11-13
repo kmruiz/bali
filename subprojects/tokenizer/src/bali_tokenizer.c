@@ -1,9 +1,10 @@
-#include <bali_utilities.h>
-#include <bali_tokenizer.h>
 #include <ctype.h>
 #include <string.h>
 
-static void __update_position_based_on_char(bali_position_t *t, char ch) {
+#include <bali_utilities.h>
+#include <bali_tokenizer.h>
+
+static inline void update_position_based_on_char(bali_position_t *t, char ch) {
   BALI_DCHECK(t != NULL);
   
   t->index++;
@@ -48,34 +49,35 @@ bool bali_lexer_next_token(bali_lexer_t *lexer, bali_token_t **token)
   lexer->current_token.kind = TK_EOF;
 
   bali_position_t start = lexer->last_token_position;
-  bali_position_t it = lexer->last_token_position;
-  char ch = lexer->src[it.index];
-  while (isspace(ch) && it.index < lexer->src_len) {
-    ch = lexer->src[it.index];
+  bali_position_t *it = &lexer->last_token_position;
+  unsigned char ch = lexer->src[it->index];
+  while (isspace(ch) && it->index < lexer->src_len) {
     lexer->current_token.leading_ws = lexer->current_token.leading_ws || ch == ' ' || ch == '\t';
     lexer->current_token.leading_nl = lexer->current_token.leading_nl || ch == '\n';
-    __update_position_based_on_char(&it, ch);
+    update_position_based_on_char(it, ch);
+    ch = lexer->src[it->index];
   }
 
-  if (it.index >= lexer->src_len) {
+  start = *it;
+  if (it->index >= lexer->src_len) {
     lexer->current_token.kind = TK_EOF;
     lexer->current_token.span.start = start;
-    lexer->current_token.span.end = it;
+    lexer->current_token.span.end = *it;
     *token = &lexer->current_token;
     return true;
   }
   
   if (isalpha(ch) || ch == '_' || ch == '#') { 
     lexer->current_token.kind = ch == '#' ? TK_PRIVATE_IDENTIFIER : TK_IDENTIFIER;
-    __update_position_based_on_char(&it, ch);
-    ch = lexer->src[it.index];
+    update_position_based_on_char(it, ch);
+    ch = lexer->src[it->index];
     
-    while ((isalnum(ch) || ch == '_') && it.index < lexer->src_len) {
-      ch = lexer->src[it.index];
-      __update_position_based_on_char(&it, ch);
+    while ((isalnum(ch) || ch == '_') && it->index < lexer->src_len) {
+      update_position_based_on_char(it, ch);
+      ch = lexer->src[it->index];
     }
     lexer->current_token.span.start = start;
-    lexer->current_token.span.end = it;
+    lexer->current_token.span.end = *it;
     *token = &lexer->current_token;
     return true;
   }
@@ -95,6 +97,8 @@ bool bali_token_cstr(bali_lexer_t *lexer, bali_token_t *token, char *output, bsi
   BALI_DCHECK(token->span.end.index > token->span.start.index);
   
   const bsize_t required_capacity = (token->span.end.index - token->span.start.index) + 1; // for the ending '\0'
+  BALI_DCHECK_BSIZE_BOUNDS(required_capacity);
+
   if (capacity < required_capacity) {
     return false;
   }
