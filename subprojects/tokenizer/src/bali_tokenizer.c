@@ -90,7 +90,7 @@ bool bali_token_cstr(bali_lexer_t *lexer, bali_token_t *token, char *output, bsi
   BALI_DCHECK(output != NULL);
   BALI_DCHECK(capacity > 0);
   BALI_DCHECK(token->span.end.index > 0);
-  BALI_DCHECK(token->span.end.index < lexer->src_len);
+  BALI_DCHECK(token->span.end.index <= lexer->src_len);
   BALI_DCHECK(token->span.start.index >= 0);
   BALI_DCHECK(token->span.end.index > token->span.start.index);
   
