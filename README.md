@@ -19,7 +19,7 @@ $ ninja -C build -t compdb > compile_commands.json
 ### Run all tests
 
 ```sh
-$ meson test -C build
+$ meson test -C build --verbose
 ```
 
 ### Generate doxygen documentation
