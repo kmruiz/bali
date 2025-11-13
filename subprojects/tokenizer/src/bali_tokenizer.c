@@ -50,12 +50,13 @@ bool bali_lexer_next_token(bali_lexer_t *lexer, bali_token_t **token)
 
   bali_position_t start = lexer->last_token_position;
   bali_position_t *it = &lexer->last_token_position;
-  unsigned char ch = lexer->src[it->index];
+  unsigned char ch = ch = lexer->src[it->index];
+  
   while (isspace(ch) && it->index < lexer->src_len) {
+    ch = lexer->src[it->index];
     lexer->current_token.leading_ws = lexer->current_token.leading_ws || ch == ' ' || ch == '\t';
     lexer->current_token.leading_nl = lexer->current_token.leading_nl || ch == '\n';
     update_position_based_on_char(it, ch);
-    ch = lexer->src[it->index];
   }
 
   start = *it;
@@ -73,8 +74,8 @@ bool bali_lexer_next_token(bali_lexer_t *lexer, bali_token_t **token)
     ch = lexer->src[it->index];
     
     while ((isalnum(ch) || ch == '_') && it->index < lexer->src_len) {
-      update_position_based_on_char(it, ch);
       ch = lexer->src[it->index];
+      update_position_based_on_char(it, ch);
     }
     lexer->current_token.span.start = start;
     lexer->current_token.span.end = *it;
@@ -103,6 +104,7 @@ bool bali_token_cstr(bali_lexer_t *lexer, bali_token_t *token, char *output, bsi
     return false;
   }
 
-  strncpy(output, lexer->src, required_capacity);
+  memcpy(output, lexer->src + token->span.start.index, required_capacity);
+  output[required_capacity] = 0;
   return true;
 }
