@@ -1,0 +1,5 @@
+option('bali_dcheck',
+  type: 'feature',
+  value: 'auto',
+  description: 'Enable BALI_DCHECK runtime checks'
+)
