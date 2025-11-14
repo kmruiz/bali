@@ -82,6 +82,28 @@ bool bali_lexer_next_token(bali_lexer_t *lexer, bali_token_t **token)
     *token = &lexer->current_token;
     return true;
   }
+
+  if (isdigit(ch)) {
+    lexer->current_token.kind = TK_NUMERIC_LITERAL_BIGINT;
+    update_position_based_on_char(it, ch);
+    ch = lexer->src[it->index];
+    
+    while ((isdigit(ch) || ch == '.' || ch == '_') && it->index < lexer->src_len) {
+      ch = lexer->src[it->index];
+      update_position_based_on_char(it, ch);
+      if (ch == '.') {
+	if (lexer->current_token.kind == TK_NUMERIC_LITERAL_RATIONAL) {
+	  break;
+	}
+	lexer->current_token.kind = TK_NUMERIC_LITERAL_RATIONAL;
+      }
+    }
+    
+    lexer->current_token.span.start = start;
+    lexer->current_token.span.end = *it;
+    *token = &lexer->current_token;
+    return true;
+  }
   
   return false;
 }
@@ -96,6 +118,7 @@ bool bali_token_cstr(bali_lexer_t *lexer, bali_token_t *token, char *output, bsi
   BALI_DCHECK(token->span.end.index <= lexer->src_len);
   BALI_DCHECK(token->span.start.index >= 0);
   BALI_DCHECK(token->span.end.index > token->span.start.index);
+  BALI_DCHECK_BSIZE_BOUNDS(capacity);
   
   const bsize_t required_capacity = (token->span.end.index - token->span.start.index) + 1; // for the ending '\0'
   BALI_DCHECK_BSIZE_BOUNDS(required_capacity);
