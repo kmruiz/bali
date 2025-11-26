@@ -1,5 +1,9 @@
 # bali
 
+> [!WARNING]  
+> This is not meant to be used anyhow in production, and it's not going to be maintained.
+> This is just me, trying to see the feasibility of an AST-less embeddable JS runtime.
+
 A lightweight, embeddable JavaScript runtime.
 
 ## Bootstrap for developers
