@@ -1,4 +1,4 @@
-#include "bali_utilities.h"
+#include <bali_utilities.h>
 #include <bali_tokenizer.h>
 #include <check.h>
 

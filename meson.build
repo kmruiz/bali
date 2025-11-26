@@ -1,7 +1,7 @@
 project(
   'bali', 'c',
   default_options: [
-    'c_std=c2x',
+    'c_std=c23',
     'warning_level=3',
     'werror=true'
   ],
@@ -26,4 +26,5 @@ subdir('docs')
 
 bali_utilities = subproject('utilities')
 bali_tokenizer = subproject('tokenizer')
-
+bali_vm        = subproject('vm')
+bali_parser    = subproject('parser')

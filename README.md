@@ -22,6 +22,12 @@ $ ninja -C build -t compdb > compile_commands.json
 $ meson test -C build --verbose
 ```
 
+#### With valgrind
+
+```sh
+# meson test --wrap='valgrind --leak-check=full --error-exitcode=1' -C build --verbose
+```
+
 ### Generate doxygen documentation
 
 ```sh

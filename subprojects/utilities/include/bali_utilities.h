@@ -6,12 +6,26 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /**
  * @brief Favour bsize_t instead of size_t to avoid gotchas
  * on unsigned under/overflow.
  **/
 typedef int64_t bsize_t;
+
+#if __has_include(<stdfloat.h>)
+#include <stdfloat.h>
+#else
+typedef float float32_t;
+typedef double float64_t;
+
+static_assert(sizeof(float32_t) == 4);
+static_assert(sizeof(float64_t) == 8);
+#endif
 
 #define BALI_DCHECK_BSIZE_BOUNDS(x) BALI_DCHECK(x <= ((bsize_t) SIZE_MAX))
 #if defined(_WIN32)
@@ -23,11 +37,6 @@ typedef int64_t bsize_t;
 #endif
 
 #define BALI_LCSTR const char *
-#if defined(__GNUC__) || defined(__clang__)
-#define BALI_ASSERT_LITERAL(s) _Static_assert(__builtin_constant_p(s), "argument must be a string literal")
-#else
-#define BALI_ASSERT_LITERAL(s)
-#endif
 
 /**
  * @brief Debug-time assertion that checks a runtime condition.
@@ -41,9 +50,6 @@ typedef int64_t bsize_t;
 #define BALI_DCHECK(cond) ((void)(cond))
 #if defined(BALI_USE_DCHECK)
 #undef BALI_DCHECK
-
-#include <stdio.h>
-#include <stdlib.h>
 static inline void bali_dcheck_fail(
 				    const char *cond,
 				    const char *file,
@@ -60,3 +66,21 @@ static inline void bali_dcheck_fail(
     }								\
   } while (0);					
 #endif
+
+static inline void bali_rcheck_fail(
+				    const char *cond,
+				    const char *file,
+				    const int line
+				    ) {
+  fprintf(stderr, "[BALI_RCHECK] %s:%d: %s failed.\n", file, line, cond);
+  abort();
+}
+
+#define BALI_RCHECK(cond)					\
+  do {								\
+    if (!(cond)) {						\
+      bali_rcheck_fail(#cond, __FILE__, __LINE__);		\
+    }								\
+  } while (0);
+
+#define BALI_RCHECK_NOT_NULL(ptr) BALI_RCHECK((ptr) != nullptr)

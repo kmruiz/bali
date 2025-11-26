@@ -5,7 +5,7 @@
 #include <bali_tokenizer.h>
 
 static inline void update_position_based_on_char(bali_position_t *t, char ch) {
-  BALI_DCHECK(t != NULL);
+  BALI_DCHECK(t != nullptr);
   
   t->index++;
   if (ch == '\n') {
@@ -17,8 +17,8 @@ static inline void update_position_based_on_char(bali_position_t *t, char ch) {
 }
 void bali_lexer_setup(bali_lexer_t *lexer, const char *src, bsize_t src_len)
 {
-  BALI_DCHECK(lexer != NULL);
-  BALI_DCHECK(src != NULL);
+  BALI_DCHECK(lexer != nullptr);
+  BALI_DCHECK(src != nullptr);
   BALI_DCHECK(src_len > 0);
   
   memset(lexer, 0, sizeof(*lexer));
@@ -29,19 +29,19 @@ void bali_lexer_setup(bali_lexer_t *lexer, const char *src, bsize_t src_len)
 
 void bali_lexer_setup_from_cstring(bali_lexer_t *lexer, BALI_LCSTR src)
 {
-  BALI_DCHECK(lexer != NULL);
-  BALI_DCHECK(src != NULL);
+  BALI_DCHECK(lexer != nullptr);
+  BALI_DCHECK(src != nullptr);
 
   bali_lexer_setup(lexer, src, strlen(src));
 }
 
 bool bali_lexer_next_token(bali_lexer_t *lexer, bali_token_t **token)
 {
-  BALI_DCHECK(lexer != NULL);
-  BALI_DCHECK(token != NULL);
+  BALI_DCHECK(lexer != nullptr);
+  BALI_DCHECK(token != nullptr);
 
   if (lexer->last_token_position.index >= lexer->src_len) {
-    *token = NULL;
+    *token = nullptr;
     return false;
   }
 
@@ -110,9 +110,9 @@ bool bali_lexer_next_token(bali_lexer_t *lexer, bali_token_t **token)
 
 bool bali_token_cstr(bali_lexer_t *lexer, bali_token_t *token, char *output, bsize_t capacity)
 {
-  BALI_DCHECK(lexer != NULL);
-  BALI_DCHECK(token != NULL);
-  BALI_DCHECK(output != NULL);
+  BALI_DCHECK(lexer != nullptr);
+  BALI_DCHECK(token != nullptr);
+  BALI_DCHECK(output != nullptr);
   BALI_DCHECK(capacity > 0);
   BALI_DCHECK(token->span.end.index > 0);
   BALI_DCHECK(token->span.end.index <= lexer->src_len);
