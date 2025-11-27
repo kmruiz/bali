@@ -29,7 +29,7 @@ typedef struct bali_vm_string_t {
   };
 } bali_vm_string_t;
 
-BALI_API void bali_vm_string_set(bali_vm_string_t *s, const char *output, bsize_t len);
+BALI_API void bali_vm_string_set(bali_vm_string_t *s, const char *input, bsize_t len);
 BALI_API int bali_vm_string_cmp(const bali_vm_string_t *s1, const bali_vm_string_t *s2);
 BALI_API bool bali_vm_string_cstr(const bali_vm_string_t *s, char *output, bsize_t capacity);
 BALI_API bool bali_vm_string_in_heap(const bali_vm_string_t *s);
@@ -40,11 +40,10 @@ struct bali_vm_call_frame_t;
 
 typedef struct bali_vm_scope_t {
   bali_vm_context_t		*context;
-  int64_t			 ir[4];
-  float64_t			 fr[4];
-  struct bali_vm_value_t	*vt[4];
+  struct bali_vm_value_t	*vt[12];
   struct bali_vm_value_t	*this;
   void				*stack;
+  void                          *stack_ptr;
 } bali_vm_scope_t;
 
 typedef struct bali_vm_key_value_pair_t {
@@ -60,7 +59,7 @@ typedef struct bali_vm_packed_object_t {
 } bali_vm_packed_object_t;
 
 typedef struct bali_vm_function_t {
-  bali_vm_string_t		 name;
+  struct bali_vm_value_t         *name;
   bool				 is_native;
   union {
     void (*native)(struct bali_vm_scope_t *);
@@ -75,9 +74,9 @@ typedef struct bali_vm_value_t {
   union {
     int64_t			 i64;
     float64_t			 f64;
-    bali_vm_string_t		*string;
-    bali_vm_packed_object_t	*obj;
-    bali_vm_function_t		*fn;
+    bali_vm_string_t		 string;
+    bali_vm_packed_object_t	 obj;
+    bali_vm_function_t		 fn;
   };
 } bali_vm_value_t;
 

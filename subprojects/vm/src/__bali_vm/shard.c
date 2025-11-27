@@ -1,4 +1,3 @@
-#include "__bali_vm/instruction.h"
 #include "__bali_vm/value.h"
 #include <bali_utilities.h>
 #include <bali_utilities/bump_arena.h>
@@ -42,6 +41,7 @@ void bali_vm_shard_setup(bali_vm_shard_t *shard, bali_vm_shard_t *parent, bali_v
   shard->export_capacity = 64;
   shard->stack_capacity = 4096;
   shard->stack = bali_bump_arena_malloc(shard->bump, shard->stack_capacity);
+  BALI_RCHECK_NOT_NULL(shard->stack);
   shard->state = SHARD_STATE_IDLE;
 }
 
@@ -60,22 +60,21 @@ void bali_vm_shard_execute(bali_vm_shard_t *shard)
   BALI_DCHECK(shard != nullptr);
   BALI_DCHECK(shard->state == SHARD_STATE_IDLE || shard->state == SHARD_STATE_YIELDED);
 
-  int64_t ir[4] = {0};
-  float64_t fr[4] = {0};
-  bali_vm_value_t *vt[4] = {0};
+  bali_vm_value_t *vt[12] = {0};
 
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 12; i++) {
     vt[i] = shard->context->undefined;
   }
   
   bali_vm_value_t *this = shard->context->undefined;
-    
+  void *stack_ptr = shard->stack;
+  
   while (shard->pc < shard->bc->length) {
     bali_instruction_t *i = &shard->bc->instructions[shard->pc];
     switch (i->bc) {
     case I_GET_GLOBAL_THIS:
       BALI_DCHECK(i->out >= R_PTR_1 && i->out <= R_PTR_4);
-      vt[i->out - R_PTR_1] = shard->context->global_this;
+      vt[i->out] = shard->context->global_this;
       shard->pc++;
       break;
     case I_GET_OBJECT_FIELD:
@@ -85,17 +84,23 @@ void bali_vm_shard_execute(bali_vm_shard_t *shard)
       BALI_DCHECK(i->op1 != i->op2);
       BALI_DCHECK(i->out >= R_PTR_1 && i->out <= R_PTR_4);
 
-      bali_vm_value_t *obj = vt[i->op1 - R_PTR_1];
-      bali_vm_value_t *field_id = vt[i->op2 - R_PTR_1];
+      bali_vm_value_t *obj = vt[i->op1];
+      bali_vm_value_t *field_id = vt[i->op2];
 
       BALI_DCHECK(obj->kind == BALI_VM_VALUE_OBJECT);
       BALI_DCHECK(field_id->kind == BALI_VM_VALUE_STRING);
 
-      for (int p = 0; p < obj->obj->prop_len; p++) {
-	bali_vm_key_value_pair_t *prop = &obj->obj->own_properties[p];
+      for (int p = 0; p < obj->obj.prop_len; p++) {
+	bali_vm_key_value_pair_t *prop = &obj->obj.own_properties[p];
 	if (prop->key->kind == BALI_VM_VALUE_STRING) {
-	  if (bali_vm_string_cmp(prop->key->string, field_id->string) == 0) {
-	    vt[i->out - R_PTR_1] = prop->value;
+	  char a[256];
+	  char b[256];
+
+	  bali_vm_string_cstr(&prop->key->string, a, 256);
+	  bali_vm_string_cstr(&field_id->string, b, 256);
+	  
+	  if (bali_vm_string_cmp(&prop->key->string, &field_id->string) == 0) {
+	    vt[i->out] = prop->value;
 	    break;
 	  }
 	}
@@ -105,18 +110,20 @@ void bali_vm_shard_execute(bali_vm_shard_t *shard)
       break;
     case I_INVOKE_DYNAMIC:
       BALI_DCHECK(i->op1 >= R_PTR_1 && i->op1 <= R_PTR_4);
-      bali_vm_value_t *fn = vt[i->out - R_PTR_1];
+      bali_vm_value_t *fn = vt[i->op1];
       BALI_DCHECK(fn != nullptr);
       BALI_DCHECK(fn->kind == BALI_VM_VALUE_FUNCTION);
-      if (fn->fn->is_native) {
+      if (fn->fn.is_native) {
 	bali_vm_scope_t scope = {0};
-	memcpy(scope.ir, ir, sizeof(int64_t) * 4);
-	memcpy(scope.fr, fr, sizeof(float64_t) * 4);
-	memcpy(scope.vt, vt, sizeof(bali_vm_value_t *) * 4);
+	memcpy(scope.vt, vt, sizeof(bali_vm_value_t *) * 12);
 	scope.this = this;
 	scope.stack = shard->stack;
+	scope.stack_ptr = stack_ptr;
 
-	fn->fn->fn.native(&scope);
+	fn->fn.fn.native(&scope);
+	memcpy(vt, scope.vt, sizeof(bali_vm_value_t *) * 12);
+	this = scope.this;
+	stack_ptr = scope.stack_ptr;
       } else {
 	puts("NOT A REAL FUNCTION");
       }
@@ -126,6 +133,17 @@ void bali_vm_shard_execute(bali_vm_shard_t *shard)
       shard->pc++;
       break;
     case I_POP:
+      shard->pc++;
+      break;
+    case I_LOADSTR:
+      BALI_DCHECK(i->out >= R_PTR_1 && i->op1 <= R_PTR_4);
+      BALI_RCHECK((bsize_t) stack_ptr < ((bsize_t) shard->stack + shard->stack_capacity));
+
+      bali_vm_value_t *value = stack_ptr;
+      stack_ptr = (void *)(((bsize_t) stack_ptr) + sizeof(bali_vm_value_t));
+      value->kind = BALI_VM_VALUE_STRING;
+      bali_vm_string_set(&value->string, i->constant, strlen(i->constant));
+      vt[i->out] = value;
       shard->pc++;
       break;
     }

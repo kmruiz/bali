@@ -36,14 +36,18 @@ void bali_parser_parse(bali_parser_t *p, bali_lexer_t *lexer)
   //bali_token_t tail[8] = {0};
   //int tail_size = 0;
 
+  char str[256];
+  
   bali_token_t *current;
   while (bali_lexer_next_token(lexer, &current)) {
     if (current->kind == TK_IDENTIFIER) {
       if (state == PS_START) {
 	state = PS_IN_EXPRESSION;
+	bali_token_cstr(lexer, current, str, 256);
 	bali_bytecode_get_global_this(p->bc, R_THIS);
-	bali_bytecode_get_object_field(p->bc, R_THIS, R_PTR_1, R_THIS);
-	bali_bytecode_invoke_dynamic(p->bc, R_THIS, R_PTR_1);
+	bali_bytecode_loadstr(p->bc, str, R_PTR_1);
+	bali_bytecode_get_object_field(p->bc, R_THIS, R_PTR_1, R_PTR_2);
+	bali_bytecode_invoke_dynamic(p->bc, R_PTR_2, R_PTR_1);
       }
     }
   }

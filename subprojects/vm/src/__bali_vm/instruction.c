@@ -1,6 +1,7 @@
 #include <bali_utilities.h>
 #include <bali_vm.h>
 #include <stdlib.h>
+#include <string.h>
 
 static inline bsize_t __ensure_enough_memory(bali_bytecode_builder_t *bc)
 {
@@ -79,3 +80,13 @@ void bali_bytecode_pop(bali_bytecode_builder_t *bc, bali_vm_register_t out)
   bc->instructions[it].bc = I_POP;
   bc->instructions[it].out = out;
 }
+
+void bali_bytecode_loadstr(bali_bytecode_builder_t *bc, char *str, bali_vm_register_t out)
+{
+  BALI_DCHECK(bc != nullptr);
+  bsize_t it = __ensure_enough_memory(bc);
+
+  bc->instructions[it].bc = I_LOADSTR;
+  bc->instructions[it].constant = strdup(str); // TODO: this leaks memory, we should not do this
+  bc->instructions[it].out = out;
+}  

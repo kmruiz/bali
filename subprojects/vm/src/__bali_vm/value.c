@@ -8,20 +8,20 @@
 #define BALI_VM_STR_SSO_LEN_MASK 0x7Fu
 #define BALI_VM_STR_MAX_LEN    ((uint64_t)0x00FFFFFFFFFFFFFFull)
 
-void bali_vm_string_set(bali_vm_string_t *s, const char *output, bsize_t len)
+void bali_vm_string_set(bali_vm_string_t *s, const char *input, bsize_t len)
 {
   BALI_DCHECK(s != nullptr);
-  BALI_DCHECK(output != nullptr);
+  BALI_DCHECK(input != nullptr);
   BALI_DCHECK_BSIZE_BOUNDS(len);
   
   if (len <= BALI_VM_STR_SSO_CAP) {
     s->sso.len_and_tag = (uint8_t) len;
-    memcpy(s->sso.data, output, len);
+    memcpy(s->sso.data, input, len);
     if (len < BALI_VM_STR_SSO_CAP) {
       s->sso.data[len] = 0;
     }
   } else {
-    s->heap.ptr = output;
+    s->heap.ptr = input;
     s->heap.len = len;
     s->sso.len_and_tag = BALI_VM_STR_TAG_HEAP;
   }
@@ -86,7 +86,6 @@ bsize_t bali_vm_string_strlen(const bali_vm_string_t *s)
   return s->sso.len_and_tag & (~BALI_VM_STR_TAG_HEAP);
 }
 
-
 bool bali_vm_value_cstr(bali_vm_value_t *value, char *output, bsize_t capacity)
 {
   BALI_DCHECK(value != nullptr);
@@ -101,7 +100,7 @@ bool bali_vm_value_cstr(bali_vm_value_t *value, char *output, bsize_t capacity)
     return snprintf(output, capacity, "%f", value->f64) < capacity;    
     break;
   case BALI_VM_VALUE_STRING:
-    return bali_vm_string_cstr(value->string, output, capacity);
+    return bali_vm_string_cstr(&value->string, output, capacity);
     break;
   case BALI_VM_VALUE_OBJECT:
     return false;
