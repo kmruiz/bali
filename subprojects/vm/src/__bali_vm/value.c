@@ -1,3 +1,4 @@
+#include "__bali_vm/value.h"
 #include <bali_vm.h>
 #include <bali_utilities.h>
 #include <stdint.h>
@@ -83,4 +84,36 @@ bsize_t bali_vm_string_strlen(const bali_vm_string_t *s)
   }
   
   return s->sso.len_and_tag & (~BALI_VM_STR_TAG_HEAP);
+}
+
+
+bool bali_vm_value_cstr(bali_vm_value_t *value, char *output, bsize_t capacity)
+{
+  BALI_DCHECK(value != nullptr);
+  BALI_DCHECK(output != nullptr);
+  BALI_DCHECK_BSIZE_BOUNDS(capacity);
+
+  switch (value->kind) {
+  case BALI_VM_VALUE_I64:
+    return snprintf(output, capacity, "%ld", value->i64) < capacity;
+    break;
+  case BALI_VM_VALUE_F64:
+    return snprintf(output, capacity, "%f", value->f64) < capacity;    
+    break;
+  case BALI_VM_VALUE_STRING:
+    return bali_vm_string_cstr(value->string, output, capacity);
+    break;
+  case BALI_VM_VALUE_OBJECT:
+    return false;
+    break;
+  case BALI_VM_VALUE_FUNCTION:
+    return false;
+    break;
+  case BALI_VM_VALUE_NULL:
+    return snprintf(output, capacity, "null") < capacity;
+    break;
+  case BALI_VM_VALUE_UNDEFINED:
+    return snprintf(output, capacity, "undefined") < capacity;
+    break;
+  }
 }

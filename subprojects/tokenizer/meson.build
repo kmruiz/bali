@@ -11,16 +11,16 @@ bali_tokenizer_lib = library(
   ]
 )
 
+bali_tokenizer = declare_dependency(link_with: bali_tokenizer_lib, include_directories: include)
+meson.override_dependency('bali_tokenizer', bali_tokenizer)
+
 bali_tokenizer_tests = executable(
   'bali_tokenizer_test',
   'test/bali_tokenizer.test.c',
-  include_directories: include,
   dependencies: [
+    bali_tokenizer,
+    dependency('bali_utilities'),
     dependency('check'),
-    dependency('bali_utilities')
-  ],
-  link_with: [
-    bali_tokenizer_lib,
   ],
   c_args: [ '-DBALI_USE_DCHECK' ]
 )

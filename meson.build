@@ -24,7 +24,8 @@ endif
 
 subdir('docs')
 
-bali_utilities = subproject('utilities')
-bali_tokenizer = subproject('tokenizer')
-bali_vm        = subproject('vm')
-bali_parser    = subproject('parser')
+subproject('utilities')
+subproject('tokenizer')
+subproject('vm')
+subproject('parser')
+subproject('cli')

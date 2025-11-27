@@ -1,6 +1,6 @@
 # bali
 
-> [!WARNING]  
+> [!WARNING]
 > This is not meant to be used anyhow in production, and it's not going to be maintained.
 > This is just me, trying to see the feasibility of an AST-less embeddable JS runtime.
 
@@ -29,7 +29,7 @@ $ meson test -C build --verbose
 #### With valgrind
 
 ```sh
-# meson test --wrap='valgrind --leak-check=full --error-exitcode=1' -C build --verbose
+$ meson test --wrap='valgrind --leak-check=full --error-exitcode=1' -C build --verbose
 ```
 
 ### Generate doxygen documentation

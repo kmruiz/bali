@@ -36,8 +36,16 @@ BALI_API bool bali_vm_string_in_heap(const bali_vm_string_t *s);
 BALI_API bsize_t bali_vm_string_strlen(const bali_vm_string_t *s);
 
 struct bali_vm_value_t;
-struct bali_vm_scope_t;
 struct bali_vm_call_frame_t;
+
+typedef struct bali_vm_scope_t {
+  bali_vm_context_t		*context;
+  int64_t			 ir[4];
+  float64_t			 fr[4];
+  struct bali_vm_value_t	*vt[4];
+  struct bali_vm_value_t	*this;
+  void				*stack;
+} bali_vm_scope_t;
 
 typedef struct bali_vm_key_value_pair_t {
   struct bali_vm_value_t	*key;
@@ -72,3 +80,5 @@ typedef struct bali_vm_value_t {
     bali_vm_function_t		*fn;
   };
 } bali_vm_value_t;
+
+BALI_API bool bali_vm_value_cstr(bali_vm_value_t *value, char *output, bsize_t capacity);

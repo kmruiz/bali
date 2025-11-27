@@ -117,7 +117,9 @@ BALI_API void bali_lexer_setup(bali_lexer_t *lexer, const char *src, bsize_t src
  */
 BALI_API void bali_lexer_setup_from_cstring(bali_lexer_t *lexer, BALI_LCSTR src);
 /**
- * @brief Advance to the next token. Writes it to @p token.
+ * @brief Advance to the next token. Writes it to @p token. The token is only valid
+ * until a call to bali_lexer_next_token. Tokens are cheap to copy, as they only hold
+ * primitive values and do not contain pointers. 
  */
 BALI_API bool bali_lexer_next_token(bali_lexer_t *lexer, bali_token_t **token);
 /**
