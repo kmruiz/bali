@@ -1,6 +1,6 @@
 #include "__bali_vm/value.h"
-#include <bali_utilities.h>
 #include <bali_utilities/bump_arena.h>
+#include <bali_utilities.h>
 #include <bali_vm.h>
 #include <stdio.h>
 #include <string.h>
@@ -69,8 +69,9 @@ void bali_vm_shard_execute(bali_vm_shard_t *shard)
   bali_vm_value_t *this = shard->context->undefined;
   void *stack_ptr = shard->stack;
   
-  while (shard->pc < shard->bc->length) {
+  while (shard->pc >= 0 && shard->pc < shard->bc->length) {
     bali_instruction_t *i = &shard->bc->instructions[shard->pc];
+    printf("Current: %d\n", i->bc);
     switch (i->bc) {
     case I_GET_GLOBAL_THIS:
       BALI_DCHECK(i->out >= R_PTR_1 && i->out <= R_PTR_4);
@@ -124,10 +125,10 @@ void bali_vm_shard_execute(bali_vm_shard_t *shard)
 	memcpy(vt, scope.vt, sizeof(bali_vm_value_t *) * 12);
 	this = scope.this;
 	stack_ptr = scope.stack_ptr;
+	shard->pc++;
       } else {
-	puts("NOT A REAL FUNCTION");
+	shard->pc = fn->fn.fn.bytecode_start;
       }
-      shard->pc++;
       break;
     case I_PUSH:
       BALI_DCHECK(i->out >= R_PTR_1 && i->op1 <= R_PTR_4);
@@ -148,15 +149,29 @@ void bali_vm_shard_execute(bali_vm_shard_t *shard)
       break;
     case I_LOADSTR:
       BALI_DCHECK(i->out >= R_PTR_1 && i->op1 <= R_PTR_4);
-      BALI_RCHECK((bsize_t) stack_ptr < ((bsize_t) shard->stack + shard->stack_capacity));
-
-      bali_vm_value_t *value = vt[i->out] = bali_bump_arena_malloc(shard->bump, sizeof(*value));
-      BALI_RCHECK_NOT_NULL(value);
+      bali_vm_value_t *str = vt[i->out] = bali_bump_arena_malloc(shard->bump, sizeof(*str));
+      BALI_RCHECK_NOT_NULL(str);
       
-      value->kind = BALI_VM_VALUE_STRING;
-      bali_vm_string_set(&value->string, i->constant, strlen(i->constant));
-      vt[i->out] = value;
+      str->kind = BALI_VM_VALUE_STRING;
+      bali_vm_string_set(&str->string, i->constant.string, strlen(i->constant.string));
+      vt[i->out] = str;
       shard->pc++;
+      break;
+    case I_LOADBLN:
+      BALI_DCHECK(i->out >= R_PTR_1 && i->op1 <= R_PTR_4);
+      bali_vm_value_t *bln = vt[i->out] = bali_bump_arena_malloc(shard->bump, sizeof(*bln));
+      BALI_RCHECK_NOT_NULL(bln);
+      
+      bln->kind = BALI_VM_VALUE_BOOLEAN;
+      bln->boolean = i->constant.boolean;
+      vt[i->out] = bln;
+      shard->pc++;
+      break;
+    case I_JUMP:
+      shard->pc = i->constant.index;
+      break;
+    case I_CJUMP:
+      shard->pc = bali_vm_value_is_trueish(vt[i->op1]) ? i->constant.index : shard->pc + 1;
       break;
     }
   }

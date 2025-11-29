@@ -9,6 +9,9 @@ typedef enum bali_instruction_bytecode_t : uint16_t {
   I_PUSH,
   I_POP,
   I_LOADSTR,
+  I_LOADBLN,
+  I_JUMP,
+  I_CJUMP,
 } bali_instruction_bytecode_t;
 
 typedef enum bali_vm_register_t : uint8_t {
@@ -30,12 +33,12 @@ typedef enum bali_vm_register_t : uint8_t {
 
 typedef struct bali_instruction_t {
   bali_instruction_bytecode_t bc;
+  bali_vm_register_t op1, op2, op3;
   union {
-    struct {
-      bali_vm_register_t op1, op2, op3;
-    };
-    void *constant;
-  };
+    char *string;
+    bsize_t index;
+    bool boolean;
+  } constant;
   bali_vm_register_t out;
 } bali_instruction_t;
 
@@ -54,3 +57,8 @@ BALI_API void bali_bytecode_invoke_dynamic(bali_bytecode_builder_t *bc, bali_vm_
 BALI_API void bali_bytecode_push(bali_bytecode_builder_t *bc, bali_vm_register_t in);
 BALI_API void bali_bytecode_pop(bali_bytecode_builder_t *bc, bali_vm_register_t out);
 BALI_API void bali_bytecode_loadstr(bali_bytecode_builder_t *bc, char *str, bali_vm_register_t out);
+BALI_API void bali_bytecode_loadbln(bali_bytecode_builder_t *bc, bool value, bali_vm_register_t out);
+BALI_API bali_instruction_t *bali_bytecode_jump(bali_bytecode_builder_t *bc);
+BALI_API bali_instruction_t *bali_bytecode_cjump(bali_bytecode_builder_t *bc, bali_vm_register_t in);
+BALI_API bsize_t bali_bytecode_current_position(bali_bytecode_builder_t *bc);
+BALI_API void bali_bytecode_dump(bali_bytecode_builder_t *bc, FILE *output);

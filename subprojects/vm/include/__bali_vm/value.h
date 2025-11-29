@@ -4,6 +4,7 @@
 #include <bali_utilities.h>
 
 typedef enum bali_vm_value_kind_t : uint8_t {
+  BALI_VM_VALUE_BOOLEAN,
   BALI_VM_VALUE_I64,
   BALI_VM_VALUE_F64,
   BALI_VM_VALUE_STRING,
@@ -74,6 +75,7 @@ typedef struct bali_vm_value_t {
   bali_vm_value_kind_t		 kind;
   uint16_t			 refs;
   union {
+    uint8_t                      boolean;
     int64_t			 i64;
     float64_t			 f64;
     bali_vm_string_t		 string;
@@ -83,3 +85,4 @@ typedef struct bali_vm_value_t {
 } bali_vm_value_t;
 
 BALI_API bool bali_vm_value_cstr(bali_vm_value_t *value, char *output, bsize_t capacity);
+BALI_API bool bali_vm_value_is_trueish(bali_vm_value_t *value);

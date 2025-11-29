@@ -94,6 +94,18 @@ bool bali_lexer_next_token(bali_lexer_t *lexer, bali_token_t **token)
     lexer->current_token.span.start = start;
     lexer->current_token.span.end = *it;
     *token = &lexer->current_token;
+
+#define LEX_AS_KW(jskw, token)						\
+    BALI_DCHECK(sizeof((jskw)) == strlen((jskw)));			\
+    if (strncmp(lexer->src + start.index, (jskw), sizeof((jskw)) - 1) == 0) { \
+      lexer->current_token.kind = (token);				\
+      return true;							\
+    }
+
+    LEX_AS_KW("if", TK_KEYWORD_IF);
+    LEX_AS_KW("true", TK_KEYWORD_TRUE);
+    LEX_AS_KW("false", TK_KEYWORD_FALSE);
+#undef LEX_AS_KW
     return true;
   }
 

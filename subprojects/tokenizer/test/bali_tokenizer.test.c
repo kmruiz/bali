@@ -32,37 +32,43 @@ SINGLE_TOKEN_TEST(can_lex_an_open_paren, "(", TK_PUNCT_OPEN_PARENTHESIS)
 SINGLE_TOKEN_TEST(can_lex_a_closing_paren, ")", TK_PUNCT_CLOSING_PARENTHESIS)
 SINGLE_TOKEN_TEST(can_lex_a_comma, ",", TK_PUNCT_COMMA)
 
-START_TEST(can_lex_a_funcall)					
-  {							
-    bali_lexer_t lexer;					
-    bali_lexer_setup_from_cstring(&lexer, "hello()");		
-    char output[256] = {0};				
-    bali_token_t *token;				
-    ck_assert(bali_lexer_next_token(&lexer, &token));
-    bali_token_cstr(&lexer, token, output, 256);	
-    ck_assert_int_eq(token->kind, TK_IDENTIFIER);		
-    ck_assert_str_eq(output, "hello");
-    ck_assert(bali_lexer_next_token(&lexer, &token));
-    ck_assert_int_eq(token->kind, TK_PUNCT_OPEN_PARENTHESIS);
-    ck_assert(bali_lexer_next_token(&lexer, &token));
-    ck_assert_int_eq(token->kind, TK_PUNCT_CLOSING_PARENTHESIS);
-    ck_assert(!bali_lexer_next_token(&lexer, &token)); // EOF
+  START_TEST(can_lex_a_funcall)					
+{							
+  bali_lexer_t lexer;					
+  bali_lexer_setup_from_cstring(&lexer, "hello()");		
+  char output[256] = {0};				
+  bali_token_t *token;				
+  ck_assert(bali_lexer_next_token(&lexer, &token));
+  bali_token_cstr(&lexer, token, output, 256);	
+  ck_assert_int_eq(token->kind, TK_IDENTIFIER);		
+  ck_assert_str_eq(output, "hello");
+  ck_assert(bali_lexer_next_token(&lexer, &token));
+  ck_assert_int_eq(token->kind, TK_PUNCT_OPEN_PARENTHESIS);
+  ck_assert(bali_lexer_next_token(&lexer, &token));
+  ck_assert_int_eq(token->kind, TK_PUNCT_CLOSING_PARENTHESIS);
+  ck_assert(!bali_lexer_next_token(&lexer, &token)); // EOF
     
-  }							
-  END_TEST
+}							
+END_TEST
 
-  START_TEST(can_lex_a_string_after_a_space)					
-  {							
-    bali_lexer_t lexer;					
-    bali_lexer_setup_from_cstring(&lexer, " 'abc' ");		
-    char output[256] = {0};				
-    bali_token_t *token;	
-    ck_assert(bali_lexer_next_token(&lexer, &token));
-    bali_token_cstr(&lexer, token, output, 256);	
-    ck_assert_int_eq(token->kind, TK_SINGLE_QUOTED_STRING);
-    ck_assert_str_eq(output, "'abc'");
-  }			
-  END_TEST
+START_TEST(can_lex_a_string_after_a_space)					
+{							
+  bali_lexer_t lexer;					
+  bali_lexer_setup_from_cstring(&lexer, " 'abc' ");		
+  char output[256] = {0};				
+  bali_token_t *token;	
+  ck_assert(bali_lexer_next_token(&lexer, &token));
+  bali_token_cstr(&lexer, token, output, 256);	
+  ck_assert_int_eq(token->kind, TK_SINGLE_QUOTED_STRING);
+  ck_assert_str_eq(output, "'abc'");
+}
+END_TEST
+
+#define KW_TEST(name, jskw, kw) SINGLE_TOKEN_TEST(name, jskw, kw)
+
+KW_TEST(can_lex_kw_if, "if", TK_KEYWORD_IF)
+KW_TEST(can_lex_kw_true, "true", TK_KEYWORD_TRUE)
+KW_TEST(can_lex_kw_false, "false", TK_KEYWORD_FALSE)
   
 Suite *bali_tokenizer_suite(void) {
     Suite *s = suite_create("bali_tokenizer");
@@ -83,6 +89,9 @@ Suite *bali_tokenizer_suite(void) {
     tcase_add_test(tc_core, can_lex_a_dbl_quote_string);
     tcase_add_test(tc_core, can_lex_a_sgl_quote_string);
     tcase_add_test(tc_core, can_lex_a_string_after_a_space);
+    tcase_add_test(tc_core, can_lex_kw_if);
+    tcase_add_test(tc_core, can_lex_kw_true);
+    tcase_add_test(tc_core, can_lex_kw_false);
 
     suite_add_tcase(s, tc_core);
     return s;

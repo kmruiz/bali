@@ -93,6 +93,9 @@ bool bali_vm_value_cstr(bali_vm_value_t *value, char *output, bsize_t capacity)
   BALI_DCHECK_BSIZE_BOUNDS(capacity);
 
   switch (value->kind) {
+  case BALI_VM_VALUE_BOOLEAN:
+    BALI_DCHECK(value->boolean == 1 || value->boolean == 0);
+    return snprintf(output, capacity, "%s", value->boolean == 1 ? "true" : "false");
   case BALI_VM_VALUE_I64:
     return snprintf(output, capacity, "%ld", value->i64) < capacity;
     break;
@@ -119,10 +122,36 @@ bool bali_vm_value_cstr(bali_vm_value_t *value, char *output, bsize_t capacity)
 
 struct bali_vm_value_t *bali_vm_scope_pop_value(bali_vm_scope_t *scope)
 {
+  BALI_DCHECK(scope != nullptr);
+
   void *next_value = ((char *)scope->stack_ptr) - sizeof(struct bali_vm_value_t);
   if (next_value < scope->stack) {
     return nullptr;
   }
   scope->stack_ptr = next_value;
   return next_value;
+}
+
+bool bali_vm_value_is_trueish(bali_vm_value_t *value)
+{
+  BALI_DCHECK(value != nullptr);
+  switch (value->kind) {
+  case BALI_VM_VALUE_BOOLEAN:
+    BALI_DCHECK(value->boolean == 1 || value->boolean == 0);
+    return value->boolean == 1;
+  case BALI_VM_VALUE_I64:
+    return value->i64 != 0;
+  case BALI_VM_VALUE_F64:
+    return value->f64 != 0;
+  case BALI_VM_VALUE_STRING:
+    return bali_vm_string_strlen(&value->string) > 0;
+  case BALI_VM_VALUE_OBJECT:
+    return true;
+  case BALI_VM_VALUE_FUNCTION:
+    return true;
+  case BALI_VM_VALUE_NULL:
+    return false;
+  case BALI_VM_VALUE_UNDEFINED:
+    return false;
+  }
 }

@@ -1,5 +1,6 @@
-#include "__bali_vm/shard.h"
-#include "__bali_vm/value.h"
+#include "__bali_vm/instruction.h"
+#define BALI_USE_DCHECK
+
 #include <bali_cli.h>
 #include <bali_tokenizer.h>
 #include <bali_parser.h>
@@ -47,7 +48,7 @@ int main()
   global_this.obj.prop_len = 1;
   global_this.obj.prop_capacity = 1;
   
-  bali_lexer_setup_from_cstring(&lexer, "print('000', 'aaa', 'bbb', 'ccc', 'ddd')");
+  bali_lexer_setup_from_cstring(&lexer, "if (true) print('000', 'aaa', 'bbb', 'ccc', 'ddd')");
   bali_bytecode_builder_setup(&bc);
   bali_bump_arena_init(&bump, 8192);
   bali_vm_shard_init(&shard, &context, &bc, &bump);
@@ -57,6 +58,8 @@ int main()
 
   bali_vm_context_setup(&context);
   context.global_this = &global_this;
+
+  bali_bytecode_dump(&bc, stdout);
   
   bali_vm_shard_setup(&shard, nullptr, SHARD_NORMAL, 0);
   bali_vm_shard_execute(&shard);
