@@ -46,6 +46,8 @@ typedef struct bali_vm_scope_t {
   void                          *stack_ptr;
 } bali_vm_scope_t;
 
+BALI_API struct bali_vm_value_t *bali_vm_scope_pop_value(bali_vm_scope_t *scope);
+
 typedef struct bali_vm_key_value_pair_t {
   struct bali_vm_value_t	*key;
   struct bali_vm_value_t	*value;

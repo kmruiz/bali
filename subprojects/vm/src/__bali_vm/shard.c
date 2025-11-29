@@ -130,17 +130,29 @@ void bali_vm_shard_execute(bali_vm_shard_t *shard)
       shard->pc++;
       break;
     case I_PUSH:
+      BALI_DCHECK(i->out >= R_PTR_1 && i->op1 <= R_PTR_4);
+      BALI_RCHECK((bsize_t) stack_ptr < ((bsize_t) shard->stack + shard->stack_capacity));
+      
+      bali_vm_value_t *reg = vt[i->op1];
+      memcpy(stack_ptr, reg, sizeof(*reg));
+      stack_ptr = ((char *)stack_ptr) + sizeof(*reg);
       shard->pc++;
       break;
     case I_POP:
+      BALI_DCHECK(i->out >= R_PTR_1 && i->op1 <= R_PTR_4);
+      BALI_RCHECK((bsize_t) stack_ptr < ((bsize_t) shard->stack + shard->stack_capacity));
+      
+      stack_ptr = ((char *)stack_ptr) - sizeof(*reg);
+      stack_ptr = stack_ptr < shard->stack ? shard->stack : stack_ptr;
       shard->pc++;
       break;
     case I_LOADSTR:
       BALI_DCHECK(i->out >= R_PTR_1 && i->op1 <= R_PTR_4);
       BALI_RCHECK((bsize_t) stack_ptr < ((bsize_t) shard->stack + shard->stack_capacity));
 
-      bali_vm_value_t *value = stack_ptr;
-      stack_ptr = (void *)(((bsize_t) stack_ptr) + sizeof(bali_vm_value_t));
+      bali_vm_value_t *value = vt[i->out] = bali_bump_arena_malloc(shard->bump, sizeof(*value));
+      BALI_RCHECK_NOT_NULL(value);
+      
       value->kind = BALI_VM_VALUE_STRING;
       bali_vm_string_set(&value->string, i->constant, strlen(i->constant));
       vt[i->out] = value;

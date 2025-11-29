@@ -51,12 +51,12 @@ bool bali_lexer_next_token(bali_lexer_t *lexer, bali_token_t **token)
   bali_position_t start = lexer->last_token_position;
   bali_position_t *it = &lexer->last_token_position;
   unsigned char ch = ch = lexer->src[it->index];
-  
+
   while (isspace(ch) && it->index < lexer->src_len) {
-    ch = lexer->src[it->index];
     lexer->current_token.leading_ws = lexer->current_token.leading_ws || ch == ' ' || ch == '\t';
     lexer->current_token.leading_nl = lexer->current_token.leading_nl || ch == '\n';
     update_position_based_on_char(it, ch);
+    ch = lexer->src[it->index];
   }
 
   start = *it;
@@ -67,16 +67,30 @@ bool bali_lexer_next_token(bali_lexer_t *lexer, bali_token_t **token)
     *token = &lexer->current_token;
     return true;
   }
+
+#define SINGLE_OP_HANDLER(ech, op)		\
+  if (ch == (ech)) {				\
+    update_position_based_on_char(it, ch);      \
+    lexer->current_token.kind = (op);		\
+    lexer->current_token.span.start = start;	\
+    lexer->current_token.span.end = *it;	\
+    *token = &lexer->current_token;		\
+    return true;				\
+  }
+
+  SINGLE_OP_HANDLER('(', TK_PUNCT_OPEN_PARENTHESIS);
+  SINGLE_OP_HANDLER(')', TK_PUNCT_CLOSING_PARENTHESIS);
+  SINGLE_OP_HANDLER(',', TK_PUNCT_COMMA);
+#undef SINGLE_OP_HANDLER
   
   if (isalpha(ch) || ch == '_' || ch == '#') { 
     lexer->current_token.kind = ch == '#' ? TK_PRIVATE_IDENTIFIER : TK_IDENTIFIER;
-    update_position_based_on_char(it, ch);
-    ch = lexer->src[it->index];
     
-    while ((isalnum(ch) || ch == '_') && it->index < lexer->src_len) {
-      ch = lexer->src[it->index];
+    do {
       update_position_based_on_char(it, ch);
-    }
+      ch = lexer->src[it->index];
+    } while ((isalnum(ch) || ch == '_') && it->index < lexer->src_len);
+    
     lexer->current_token.span.start = start;
     lexer->current_token.span.end = *it;
     *token = &lexer->current_token;
@@ -85,20 +99,36 @@ bool bali_lexer_next_token(bali_lexer_t *lexer, bali_token_t **token)
 
   if (isdigit(ch)) {
     lexer->current_token.kind = TK_NUMERIC_LITERAL_BIGINT;
-    update_position_based_on_char(it, ch);
-    ch = lexer->src[it->index];
-    
-    while ((isdigit(ch) || ch == '.' || ch == '_') && it->index < lexer->src_len) {
-      ch = lexer->src[it->index];
+    do {
       update_position_based_on_char(it, ch);
+      ch = lexer->src[it->index];
       if (ch == '.') {
 	if (lexer->current_token.kind == TK_NUMERIC_LITERAL_RATIONAL) {
 	  break;
 	}
 	lexer->current_token.kind = TK_NUMERIC_LITERAL_RATIONAL;
       }
-    }
+    } while ((isdigit(ch) || ch == '.' || ch == '_') && it->index < lexer->src_len);
     
+    lexer->current_token.span.start = start;
+    lexer->current_token.span.end = *it;
+    *token = &lexer->current_token;
+    return true;
+  }
+
+  if (ch == '"' || ch == '\'') {
+    lexer->current_token.kind = ch == '"' ? TK_DOUBLE_QUOTED_STRING : TK_SINGLE_QUOTED_STRING;
+    char eos = ch;
+    
+    do {
+      update_position_based_on_char(it, ch);
+      ch = lexer->src[it->index];
+      if (ch == '\\') {
+	continue;
+      }
+    } while (ch != eos && it->index < lexer->src_len);
+    update_position_based_on_char(it, ch); // the ending quote is important
+
     lexer->current_token.span.start = start;
     lexer->current_token.span.end = *it;
     *token = &lexer->current_token;
@@ -127,7 +157,7 @@ bool bali_token_cstr(bali_lexer_t *lexer, bali_token_t *token, char *output, bsi
     return false;
   }
 
-  memcpy(output, lexer->src + token->span.start.index, required_capacity);
+  memcpy(output, lexer->src + token->span.start.index, token->span.end.index - token->span.start.index);
   output[required_capacity] = 0;
   return true;
 }

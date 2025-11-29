@@ -116,3 +116,13 @@ bool bali_vm_value_cstr(bali_vm_value_t *value, char *output, bsize_t capacity)
     break;
   }
 }
+
+struct bali_vm_value_t *bali_vm_scope_pop_value(bali_vm_scope_t *scope)
+{
+  void *next_value = ((char *)scope->stack_ptr) - sizeof(struct bali_vm_value_t);
+  if (next_value < scope->stack) {
+    return nullptr;
+  }
+  scope->stack_ptr = next_value;
+  return next_value;
+}
