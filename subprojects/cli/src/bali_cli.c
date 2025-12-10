@@ -1,4 +1,3 @@
-#include "__bali_vm/instruction.h"
 #define BALI_USE_DCHECK
 
 #include <bali_cli.h>
@@ -48,7 +47,7 @@ int main()
   global_this.obj.prop_len = 1;
   global_this.obj.prop_capacity = 1;
   
-  bali_lexer_setup_from_cstring(&lexer, "if (true) print('000', 'aaa', 'bbb', 'ccc', 'ddd')");
+  bali_lexer_setup_from_cstring(&lexer, "if (false) print('if') else if (false) print('else_if') else print('else')");
   bali_bytecode_builder_setup(&bc);
   bali_bump_arena_init(&bump, 8192);
   bali_vm_shard_init(&shard, &context, &bc, &bump);

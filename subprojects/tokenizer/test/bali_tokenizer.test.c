@@ -64,9 +64,26 @@ START_TEST(can_lex_a_string_after_a_space)
 }
 END_TEST
 
+START_TEST(can_lex_an_id_after_a_keyword)					
+{							
+  bali_lexer_t lexer;					
+  bali_lexer_setup_from_cstring(&lexer, "else print('hello')");		
+  char output[256] = {0};				
+  bali_token_t *token;	
+  ck_assert(bali_lexer_next_token(&lexer, &token));
+  bali_token_cstr(&lexer, token, output, 256);	
+  ck_assert_int_eq(token->kind, TK_KEYWORD_ELSE);
+  ck_assert(bali_lexer_next_token(&lexer, &token));
+  bali_token_cstr(&lexer, token, output, 256);	
+  ck_assert_int_eq(token->kind, TK_IDENTIFIER);
+  ck_assert_str_eq(output, "print");
+}
+END_TEST
+
 #define KW_TEST(name, jskw, kw) SINGLE_TOKEN_TEST(name, jskw, kw)
 
 KW_TEST(can_lex_kw_if, "if", TK_KEYWORD_IF)
+KW_TEST(can_lex_kw_else, "else", TK_KEYWORD_ELSE)
 KW_TEST(can_lex_kw_true, "true", TK_KEYWORD_TRUE)
 KW_TEST(can_lex_kw_false, "false", TK_KEYWORD_FALSE)
   
@@ -89,7 +106,9 @@ Suite *bali_tokenizer_suite(void) {
     tcase_add_test(tc_core, can_lex_a_dbl_quote_string);
     tcase_add_test(tc_core, can_lex_a_sgl_quote_string);
     tcase_add_test(tc_core, can_lex_a_string_after_a_space);
+    tcase_add_test(tc_core, can_lex_an_id_after_a_keyword);
     tcase_add_test(tc_core, can_lex_kw_if);
+    tcase_add_test(tc_core, can_lex_kw_else);
     tcase_add_test(tc_core, can_lex_kw_true);
     tcase_add_test(tc_core, can_lex_kw_false);
 

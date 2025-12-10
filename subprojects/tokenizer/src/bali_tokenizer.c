@@ -103,6 +103,7 @@ bool bali_lexer_next_token(bali_lexer_t *lexer, bali_token_t **token)
     }
 
     LEX_AS_KW("if", TK_KEYWORD_IF);
+    LEX_AS_KW("else", TK_KEYWORD_ELSE);
     LEX_AS_KW("true", TK_KEYWORD_TRUE);
     LEX_AS_KW("false", TK_KEYWORD_FALSE);
 #undef LEX_AS_KW
